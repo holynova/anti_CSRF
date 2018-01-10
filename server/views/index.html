@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>anti_CSRF</title>
+  <!-- <link rel="stylesheet" href="style.css"> -->
+  <style>
+    html {
+      font-size: 14px;
+    }
+
+    html body {
+      background-color: #ececec;
+    }
+
+    html body .wrapper {
+      width: 80%;
+      margin: 0 auto;
+    }
+
+    html body .wrapper .part {
+      background-color: #fff;
+      margin: 1rem;
+      padding: 2rem;
+      float: left;
+      min-height: 250px;
+      width: 250px;
+    }
+
+    h3 {
+      margin: 0;
+    }
+    /*# sourceMappingURL=style.css.map */
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <h1>CSRF攻击演示</h1>
+    <div class="login part">
+      <h3>登录</h3>
+      <form action="localhost/" class="loginForm">
+        username:
+        <br>
+        <input type="text" name="username" value="one">
+        <br> password:
+        <br>
+        <input type="password" name="password" value="one">
+        <br>
+        <br>
+        <input type="submit" value="登录" class="btnLogin">
+        <button class="btnLogout">登出</button>
+      </form>
+      <h3 class="loginStatus">当前未登录</h3>
+    </div>
+    <div class="part balance">
+      <h3>账户余额</h3>
+      <ul>
+      </ul>
+      <button class="btnGetBalance">刷新余额</button>
+    </div>
+    <div class="get-test part">
+      <h3>GET请求转账</h3>
+      <form action="http://localhost:10010/tranfer_money" method="GET" class="getForm">
+        收款人:
+        <br>
+        <input type="text" name="to" value="two">
+        <br> 金额:
+        <br>
+        <input type="number" name="amount" value="100">
+        <br>
+        <br>
+        <input type="submit" value="汇款" class="btnGet">
+      </form>
+    </div>
+    <div class="post-test part">
+      <h3>POST请求转账</h3>
+      <form action="http://localhost:10010/tranfer_money" method="POST" class="postForm">
+        收款人:
+        <br>
+        <input type="text" name="to" value="three">
+        <br> 金额:
+        <br>
+        <input type="number" name="amount" value="222">
+        <br>
+        <br>
+        <input type="submit" value="汇款" class="btnPost">
+      </form>
+    </div>
+
+  </div>
+  <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+  <script>
+    const log = console.log.bind(console)
+    const host = 'http://localhost:10010'
+    const urlDict = {
+      login: `${host}/login`,
+      logout: `${host}/logout`,
+      tranferMoney: `${host}/transfer_money`,
+      getBalance: `${host}/get_user_balance`,
+    }
+
+
+    function commonSuccess(res, success, fail) {
+      // getUserBalance()
+      const {
+        code,
+        msg,
+        data
+      } = res
+      if (code !== 0) {
+        log(`失败, ${msg}, 错误码${code}`)
+        if (typeof fail === 'function') {
+          fail(res)
+        }
+      } else {
+        log('成功response = ', res)
+        if (typeof success === 'function') {
+          success(res)
+        }
+      }
+    }
+
+    function initGetBtn() {
+      $('.btnGet').click(e => {
+        e.preventDefault()
+        const data = $('form.getForm').serialize()
+
+        function success(res) {
+          getUserBalance()
+        }
+        $.ajax(
+          urlDict.tranferMoney, {
+            method: 'GET',
+            data,
+            success: (res) => {
+              commonSuccess(res, success)
+            }
+          })
+      })
+    }
+
+    function initLoginBtn() {
+      $('.btnLogin').click(e => {
+        e.preventDefault()
+        const data = $('form.loginForm').serialize()
+        $.ajax(
+          urlDict.login, {
+            method: 'POST',
+            data,
+            success: (res) => {
+              commonSuccess(res, (res) => {
+                $('.loginStatus').html(`已登录,当前用户${res.data.username}`).css({
+                  color: 'green'
+                })
+              })
+            }
+            // success
+          })
+      })
+    }
+
+    function initPostBtn() {
+      $('.btnPost').click(e => {
+        e.preventDefault()
+        const data = $('form.postForm').serialize()
+
+        function success(res) {
+          getUserBalance()
+        }
+        $.ajax(
+          urlDict.tranferMoney, {
+            method: 'POST',
+            data,
+            success: (res) => {
+              commonSuccess(res, success)
+            }
+          })
+      })
+    }
+
+    function initLogoutBtn() {
+      $('.btnLogout').click((e) => {
+        e.preventDefault()
+
+        $.ajax(urlDict.logout, {
+          method: 'GET',
+          success: (res) => {
+            commonSuccess(res, () => {
+              $('.loginStatus').html('未登录').css({
+                color: 'grey'
+              })
+            })
+          }
+        })
+      })
+    }
+
+    function initGetBalanceBtn() {
+      $('.btnGetBalance').click(e => {
+        getUserBalance()
+      })
+    }
+
+
+    function getUserBalance() {
+      function success(res) {
+        const dict = res.data
+        const keys = Object.keys(dict)
+        const list = []
+        for (let i = 0; i < keys.length; i++) {
+          let key = keys[i]
+          let value = dict[key]
+          list.push(`<li>${key}:${value}元</li>`)
+        }
+        $('.balance ul').html(list.join(''))
+        log('余额已刷新')
+      }
+      $.ajax(urlDict.getBalance, {
+        method: 'GET',
+        success: (res) => {
+          commonSuccess(res, success)
+        }
+      })
+    }
+
+
+    function main() {
+      initGetBtn()
+      initLoginBtn()
+      initLogoutBtn()
+      initPostBtn()
+      initGetBalanceBtn()
+      getUserBalance()
+    }
+
+    $(document).ready(() => {
+      log('readey')
+      main()
+    })
+  </script>
+</body>
+
+</html>

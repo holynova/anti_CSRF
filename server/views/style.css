@@ -1,0 +1,19 @@
+html {
+  font-size: 14px;
+}
+
+html body {
+  background-color: #ececec;
+}
+
+html body .wrapper {
+  width: 50%;
+  margin: 0 auto;
+}
+
+html body .wrapper .part {
+  background-color: #fff;
+  margin: 1rem;
+  padding: 2rem;
+}
+/*# sourceMappingURL=style.css.map */

